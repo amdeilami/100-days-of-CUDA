@@ -1,12 +1,13 @@
 #include <cuda_runtime.h>
 #include <stdio.h>
+#include <time.h>
 
 __global__ void vecAddKernel(float *A, float *B, float *C, int n)
 {
     int i = blockIdx.x * blockDim.x + threadIdx.x;
+    // see if we are still in an acceptable region of data
     if (i < n)
     {
-        // we are still in the acceptable region of data
         C[i] = A[i] + B[i];
     }
 }
@@ -35,7 +36,8 @@ void vecAdd(float *A_h, float *B_h, float *C_h, int elements)
     cudaMemcpy(A_d, A_h, size, cudaMemcpyHostToDevice);
     cudaMemcpy(B_d, B_h, size, cudaMemcpyHostToDevice);
 
-    // will do this later, the kernel...
+    // call the kernel
+    vecAddKernel<<<ceil(elements / 256.0), 256>>>(A_d, B_d, C_d, elements);
 
     // copy the results to host
     cudaMemcpy(C_h, C_d, size, cudaMemcpyDeviceToHost);
@@ -46,7 +48,37 @@ void vecAdd(float *A_h, float *B_h, float *C_h, int elements)
     cudaFree(C_d);
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+    // getting the dimension of vector from user
+    int n = atoi(argv[1]);
+    int size = n * sizeof(float);
+
+    float *A_h = (float *)malloc(size);
+    float *B_h = (float *)malloc(size);
+    float *C_h = (float *)malloc(size);
+
+    srand((unsigned int)time(NULL));
+
+    for (int i = 0; i < n; ++i)
+    {
+        A_h[i] = (float)rand() / RAND_MAX;
+        B_h[i] = (float)rand() / RAND_MAX;
+        C_h[i] = 0.0;
+    }
+
+    vecAdd(A_h, B_h, C_h, n);
+
+    printf("\n");
+    for (int i = 0; i < n; i++)
+    {
+        printf("%f , ", C_h[i]);
+    }
+    printf("\n");
+
+    free(A_h);
+    free(B_h);
+    free(C_h);
+
     return 0;
 }
