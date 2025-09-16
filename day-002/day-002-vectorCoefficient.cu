@@ -1,5 +1,6 @@
 #include <cuda_runtime.h>
 #include <stdio.h>
+#include <time.h>
 
 __global__ void vectorCoefficientKernel(float *A_d, float *R_d, float coefficient, int n)
 {
@@ -43,20 +44,33 @@ int main(int argc, char *argv[])
     float *A_h = (float *)malloc(n * sizeof(float));
     float *R_h = (float *)malloc(n * sizeof(float));
 
-    float coefficient = 3;
+    srand((unsigned int)time(NULL));
+
+    float coefficient = (float)(rand() % 10000000000);
 
     for (int i = 0; i < n; ++i)
     {
-        A_h[i] = 2;
-        R_h[i] = 0;
+        A_h[i] = (float)(rand() % 1444);
+        R_h[i] = 0.0;
+    }
+
+    printf("coefficient: %f\n", coefficient);
+
+    for (int i = 0; i < n; ++i)
+    {
+        printf("%f ,", A_h[i]);
     }
 
     vectorCoefficient(A_h, R_h, coefficient, n);
+
+    printf("\n\n");
 
     for (int i = 0; i < n; ++i)
     {
         printf("%f ,", R_h[i]);
     }
+
+    printf("\n\n");
 
     free(A_h);
     free(R_h);
